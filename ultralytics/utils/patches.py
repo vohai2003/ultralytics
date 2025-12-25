@@ -31,15 +31,14 @@ def imread(filename: str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray | None:
         >>> img = imread("path/to/image.jpg")
         >>> img = imread("path/to/image.jpg", cv2.IMREAD_GRAYSCALE)
     """
-    file_bytes = np.fromfile(filename, np.uint8)
     if filename.endswith((".tiff", ".tif")):
-        success, frames = cv2.imdecodemulti(file_bytes, cv2.IMREAD_UNCHANGED)
+        success, frames = cv2.imreadmulti(filename=filename, flags=cv2.IMREAD_UNCHANGED)
         if success:
             # Handle multi-frame TIFFs and color images
             return frames[0] if len(frames) == 1 and frames[0].ndim == 3 else np.stack(frames, axis=2)
         return None
     else:
-        im = cv2.imdecode(file_bytes, flags)
+        im = cv2.imread(filename, flags)
         return im[..., None] if im is not None and im.ndim == 2 else im  # Always ensure 3 dimensions
 
 
@@ -62,7 +61,7 @@ def imwrite(filename: str, img: np.ndarray, params: list[int] | None = None) -> 
         True
     """
     try:
-        cv2.imencode(Path(filename).suffix, img, params)[1].tofile(filename)
+        cv2.imwrite(Path(filename).suffix, img, params)
         return True
     except Exception:
         return False
