@@ -61,7 +61,13 @@ def imwrite(filename: str, img: np.ndarray, params: list[int] | None = None) -> 
         True
     """
     try:
-        cv2.imwrite(Path(filename).suffix, img, params)
+        # Check if img is already uint8, if not, scale back accordingly
+        if img.dtype != np.uint8:
+            img_max = img.max()
+            img_min = img.min()
+            img = (img - img_min)/(img_max - img_min) * 255.0
+            img = img.astype(np.uint8)
+        cv2.imencode(Path(filename).suffix, img, params)[1].tofile(filename)
         return True
     except Exception:
         return False
