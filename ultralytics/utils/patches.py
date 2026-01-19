@@ -38,7 +38,7 @@ def imread(filename: str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray | None:
             return frames[0] if len(frames) == 1 and frames[0].ndim == 3 else np.stack(frames, axis=2)
         return None
     else:
-        im = cv2.imread(filename, flags)
+        im = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), flags)
         return im[..., None] if im is not None and im.ndim == 2 else im  # Always ensure 3 dimensions
 
 
