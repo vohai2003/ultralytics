@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import cv2
+import tifffile
 import numpy as np
 import torch
 
@@ -32,11 +33,8 @@ def imread(filename: str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray | None:
         >>> img = imread("path/to/image.jpg", cv2.IMREAD_GRAYSCALE)
     """
     if filename.endswith((".tiff", ".tif")):
-        success, frames = cv2.imreadmulti(filename=filename, flags=cv2.IMREAD_UNCHANGED)
-        if success:
-            # Handle multi-frame TIFFs and color images
-            return frames[0] if len(frames) == 1 and frames[0].ndim == 3 else np.stack(frames, axis=2)
-        return None
+        image = tifffile.imread(filename)
+        return image
     else:
         im = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), flags)
         return im[..., None] if im is not None and im.ndim == 2 else im  # Always ensure 3 dimensions
