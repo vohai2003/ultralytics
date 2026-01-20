@@ -67,6 +67,46 @@ def test_detect():
     raise Exception("Resume test failed!")
 
 
+def test_detect_multispectral():
+    """Test YOLO object detection training, validation, and prediction functionality."""
+    overrides = {"data": "coco8-multispectral.yaml", "model": "yolo11n.yaml", "imgsz": 32, "epochs": 1, "save": False}
+    cfg = get_cfg(DEFAULT_CFG)
+    cfg.data = "coco8-multispectral.yaml"
+    cfg.imgsz = 32
+
+    # Trainer
+    trainer = detect.DetectionTrainer(overrides=overrides)
+    trainer.add_callback("on_train_start", test_func)
+    assert test_func in trainer.callbacks["on_train_start"], "callback test failed"
+    trainer.train()
+
+    # Validator
+    val = detect.DetectionValidator(args=cfg)
+    val.add_callback("on_val_start", test_func)
+    assert test_func in val.callbacks["on_val_start"], "callback test failed"
+    val(model=trainer.best)  # validate best.pt
+
+    # Predictor
+    pred = detect.DetectionPredictor(overrides={"imgsz": [64, 64]})
+    pred.add_callback("on_predict_start", test_func)
+    assert test_func in pred.callbacks["on_predict_start"], "callback test failed"
+    # Confirm there is no issue with sys.argv being empty
+    with mock.patch.object(sys, "argv", []):
+        result = pred(source=ASSETS, model=MODEL)
+        assert len(result), "predictor test failed"
+
+    # Test resume functionality
+    overrides["resume"] = trainer.last
+    trainer = detect.DetectionTrainer(overrides=overrides)
+    try:
+        trainer.train()
+    except Exception as e:
+        print(f"Expected exception caught: {e}")
+        return
+
+    raise Exception("Resume test failed!")
+
+
 def test_segment():
     """Test image segmentation training, validation, and prediction pipelines using YOLO models."""
     overrides = {
