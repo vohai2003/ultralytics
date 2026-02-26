@@ -34,6 +34,7 @@ def imread(filename: str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray | None:
     """
     if filename.endswith((".tiff", ".tif")):
         image = tifffile.imread(filename)
+        image = image.transpose((1,2,0))
         return image
     else:
         im = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), flags)
